@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>C. elegans Worm Counter</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="app-header">
+    <h1>🔬 Worm Counter</h1>
+    <span class="subtitle">C. elegans Scanner</span>
+  </header>
+
+  <!-- Camera View -->
+  <section class="camera-section">
+    <div class="camera-container">
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="overlay" class="camera-overlay"></canvas>
+
+      <!-- Motion indicator -->
+      <div id="motionIndicator" class="motion-indicator hidden">
+        <span class="motion-dot"></span> Motion detected
+      </div>
+
+      <!-- Status bar -->
+      <div class="camera-status-bar">
+        <span id="frameCount" class="frame-badge">0 frames</span>
+        <span id="statusText" class="status-text">Tap Start to begin</span>
+        <span id="qualityBadge" class="quality-badge"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Controls -->
+  <section class="controls-section">
+    <div class="controls-row">
+      <button id="btnStart" class="btn btn-primary" onclick="startScanning()">
+        ▶ Start Scan
+      </button>
+      <button id="btnStop" class="btn btn-danger hidden" onclick="stopScanning()">
+        ■ Stop
+      </button>
+      <button id="btnCapture" class="btn btn-secondary" onclick="manualCapture()" disabled>
+        📷 Capture
+      </button>
+      <button id="btnClear" class="btn btn-outline" onclick="clearSession()">
+        🗑 Clear
+      </button>
+    </div>
+
+    <!-- Settings Panel -->
+    <div class="settings-panel">
+      <div class="setting-row">
+        <label for="autoCapture">Auto-capture</label>
+        <label class="toggle">
+          <input type="checkbox" id="autoCapture" checked />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="setting-row">
+        <label for="captureInterval">Interval (s)</label>
+        <input type="range" id="captureInterval" min="1" max="10" value="3" class="range-input" />
+        <span id="intervalValue">3s</span>
+      </div>
+      <div class="setting-row">
+        <label for="motionThreshold">Motion sensitivity</label>
+        <input type="range" id="motionThreshold" min="5" max="50" value="15" class="range-input" />
+        <span id="motionValue">15</span>
+      </div>
+    </div>
+
+    <!-- Stitch & Count Button -->
+    <button id="btnStitch" class="btn btn-success btn-large" onclick="stitchAndCount()" disabled>
+      🔬 Stitch &amp; Count Worms
+    </button>
+  </section>
+
+  <!-- Progress / Loading -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-card">
+      <div class="spinner"></div>
+      <p id="loadingText">Processing...</p>
+    </div>
+  </div>
+
+  <!-- Results Panel -->
+  <section id="resultsPanel" class="results-panel hidden">
+    <h2 class="results-title">Analysis Results</h2>
+
+    <!-- Stitched Image -->
+    <div class="stitched-image-container">
+      <img id="stitchedImage" class="stitched-image" alt="Stitched panorama" />
+      <div class="image-label">Stitched Panorama</div>
+    </div>
+
+    <!-- Worm Count Cards -->
+    <div class="count-grid">
+      <div class="count-card count-total">
+        <div class="count-number" id="countTotal">–</div>
+        <div class="count-label">Total Worms</div>
+      </div>
+      <div class="count-card count-adults">
+        <div class="count-number" id="countAdults">–</div>
+        <div class="count-label">Adults</div>
+      </div>
+      <div class="count-card count-larvae">
+        <div class="count-number" id="countLarvae">–</div>
+        <div class="count-label">Larvae</div>
+      </div>
+      <div class="count-card count-eggs">
+        <div class="count-number" id="countEggs">–</div>
+        <div class="count-label">Eggs</div>
+      </div>
+    </div>
+
+    <!-- Metadata -->
+    <div class="meta-row">
+      <span class="meta-badge" id="confidenceBadge"></span>
+      <span class="meta-badge" id="qualityResultBadge"></span>
+      <span class="meta-badge" id="framesBadge"></span>
+    </div>
+
+    <!-- Observations -->
+    <div id="observationsCard" class="observations-card hidden">
+      <h3>Observations</h3>
+      <p id="observationsText"></p>
+    </div>
+
+    <!-- Raw Response (collapsible) -->
+    <details class="raw-details">
+      <summary>Raw Claude Response</summary>
+      <pre id="rawResponse"></pre>
+    </details>
+
+    <!-- New Scan Button -->
+    <button class="btn btn-primary btn-large" onclick="newScan()">
+      🔄 New Scan
+    </button>
+  </section>
+
+  <!-- Camera Selection -->
+  <div id="cameraSelectPanel" class="camera-select-panel hidden">
+    <label for="cameraSelect">Camera:</label>
+    <select id="cameraSelect" onchange="switchCamera()"></select>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

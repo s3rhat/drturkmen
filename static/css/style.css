@@ -1,0 +1,504 @@
+/* ─── Reset & Base ─────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary:    #2563eb;
+  --primary-dk: #1d4ed8;
+  --success:    #16a34a;
+  --danger:     #dc2626;
+  --secondary:  #4b5563;
+  --bg:         #0f172a;
+  --bg-card:    #1e293b;
+  --bg-card2:   #243045;
+  --text:       #f1f5f9;
+  --text-muted: #94a3b8;
+  --border:     #334155;
+  --accent:     #38bdf8;
+  --worm-green: #4ade80;
+  --radius:     12px;
+  --radius-sm:  8px;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* ─── Header ────────────────────────────────────────────────────────────────── */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px 10px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+
+.app-header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+
+/* ─── Camera Section ────────────────────────────────────────────────────────── */
+.camera-section {
+  padding: 12px 16px;
+}
+
+.camera-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: #000;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 2px solid var(--border);
+}
+
+#video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.camera-overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+}
+
+.motion-indicator {
+  position: absolute;
+  top: 10px; left: 10px;
+  background: rgba(220, 38, 38, 0.85);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(4px);
+}
+
+.motion-dot {
+  width: 8px; height: 8px;
+  background: #fff;
+  border-radius: 50%;
+  animation: pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(0.8); }
+}
+
+.camera-status-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.8));
+  padding: 24px 12px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.frame-badge {
+  background: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
+
+.status-text {
+  flex: 1;
+  font-size: 12px;
+  color: #e2e8f0;
+}
+
+.quality-badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.1);
+}
+
+/* ─── Controls Section ──────────────────────────────────────────────────────── */
+.controls-section {
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.controls-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ─── Buttons ───────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex: 1;
+  min-width: 70px;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-primary  { background: var(--primary);   color: #fff; }
+.btn-primary:not(:disabled):hover  { background: var(--primary-dk); }
+
+.btn-success  { background: var(--success);   color: #fff; }
+.btn-success:not(:disabled):hover  { background: #15803d; }
+
+.btn-danger   { background: var(--danger);    color: #fff; }
+.btn-danger:not(:disabled):hover   { background: #b91c1c; }
+
+.btn-secondary { background: var(--secondary); color: #fff; }
+.btn-secondary:not(:disabled):hover { background: #374151; }
+
+.btn-outline {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+.btn-outline:not(:disabled):hover { background: var(--bg-card2); }
+
+.btn-large {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  border-radius: var(--radius);
+}
+
+/* ─── Settings Panel ────────────────────────────────────────────────────────── */
+.settings-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.setting-row label:first-child {
+  width: 130px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.setting-row span {
+  width: 30px;
+  text-align: right;
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Toggle Switch */
+.toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
+.toggle input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--border);
+  border-radius: 24px;
+  transition: 0.3s;
+}
+.slider::before {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  left: 3px; top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+.toggle input:checked + .slider { background: var(--primary); }
+.toggle input:checked + .slider::before { transform: translateX(20px); }
+
+/* Range Input */
+.range-input {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+}
+.range-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* ─── Loading Overlay ───────────────────────────────────────────────────────── */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.loading-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  text-align: center;
+  max-width: 280px;
+  width: 90%;
+}
+
+.spinner {
+  width: 48px; height: 48px;
+  border: 4px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+#loadingText {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* ─── Results Panel ─────────────────────────────────────────────────────────── */
+.results-panel {
+  padding: 0 16px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.results-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--worm-green);
+  text-align: center;
+}
+
+.stitched-image-container {
+  position: relative;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 2px solid var(--border);
+  background: #000;
+}
+
+.stitched-image {
+  width: 100%;
+  display: block;
+  max-height: 350px;
+  object-fit: contain;
+}
+
+.image-label {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(0,0,0,0.6);
+  text-align: center;
+  padding: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Count Grid */
+.count-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.count-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 12px;
+  text-align: center;
+}
+
+.count-number {
+  font-size: 36px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.count-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.count-total   .count-number { color: var(--worm-green); }
+.count-adults  .count-number { color: var(--accent); }
+.count-larvae  .count-number { color: #fbbf24; }
+.count-eggs    .count-number { color: #f472b6; }
+
+/* Meta Row */
+.meta-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.meta-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--bg-card2);
+  border: 1px solid var(--border);
+}
+
+/* Observations */
+.observations-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.observations-card h3 {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.observations-card p {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+/* Raw details */
+.raw-details {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+}
+
+.raw-details summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.raw-details pre {
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* ─── Camera Select ─────────────────────────────────────────────────────────── */
+.camera-select-panel {
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.camera-select-panel select {
+  flex: 1;
+  background: var(--bg-card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+/* ─── Utility ───────────────────────────────────────────────────────────────── */
+.hidden { display: none !important; }
+
+/* Scanning animation on camera border */
+.camera-container.scanning {
+  border-color: var(--success);
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.4);
+  animation: scanPulse 2s ease-in-out infinite;
+}
+
+@keyframes scanPulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.4); }
+  50%       { box-shadow: 0 0 0 6px rgba(22, 163, 74, 0.15); }
+}
+
+/* Capture flash */
+.camera-container.flash::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.5);
+  animation: flash 0.3s ease-out forwards;
+}
+
+@keyframes flash {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* Scrollable page */
+body { overflow-y: auto; }
