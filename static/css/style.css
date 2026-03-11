@@ -471,6 +471,31 @@ html, body {
   font-size: 13px;
 }
 
+/* ─── Grid select & progress ────────────────────────────────────────────────── */
+.grid-select {
+  flex: 1;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+.grid-progress {
+  width: 34px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+/* Make the overlay canvas pointer-events active so taps register */
+.camera-overlay {
+  pointer-events: auto !important;
+  cursor: crosshair;
+}
+
 /* ─── Utility ───────────────────────────────────────────────────────────────── */
 .hidden { display: none !important; }
 

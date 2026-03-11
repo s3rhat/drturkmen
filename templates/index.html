@@ -72,6 +72,17 @@
         <input type="range" id="motionThreshold" min="5" max="50" value="15" class="range-input" />
         <span id="motionValue">15</span>
       </div>
+      <div class="setting-row">
+        <label for="gridSize">Scan grid</label>
+        <select id="gridSize" class="grid-select" onchange="onGridSizeChange()">
+          <option value="0">Off</option>
+          <option value="2">2 × 2</option>
+          <option value="3" selected>3 × 3</option>
+          <option value="4">4 × 4</option>
+          <option value="5">5 × 5</option>
+        </select>
+        <span id="gridProgress" class="grid-progress">0/9</span>
+      </div>
     </div>
 
     <!-- Stitch & Count Button -->

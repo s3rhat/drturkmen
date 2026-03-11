@@ -12,6 +12,12 @@ let frameCount      = 0;
 let lastFrameData   = null;          // ImageData for motion comparison
 let currentDeviceId = null;
 
+// ─── Grid state ───────────────────────────────────────────────────────────────
+let gridCols        = 3;             // current grid size (0 = off)
+let gridDone        = new Set();     // set of cell indices (0-based) marked done
+let gridCurrent     = 0;             // index of the suggested next cell
+let gridRafId       = null;          // requestAnimationFrame id for grid drawing
+
 // Canvas for frame analysis (not in DOM)
 const analysisCanvas  = document.createElement('canvas');
 const analysisCtx     = analysisCanvas.getContext('2d');
@@ -20,6 +26,7 @@ const analysisCtx     = analysisCanvas.getContext('2d');
 function getCaptureInterval()  { return parseInt(document.getElementById('captureInterval').value, 10) * 1000; }
 function getMotionThreshold()  { return parseInt(document.getElementById('motionThreshold').value, 10); }
 function isAutoCapture()       { return document.getElementById('autoCapture').checked; }
+function getGridSize()         { return parseInt(document.getElementById('gridSize').value, 10); }
 
 // Wire up range inputs to display their live value
 document.getElementById('captureInterval').addEventListener('input', e => {
@@ -211,6 +218,8 @@ async function captureFrame() {
       document.getElementById('frameCount').textContent = frameCount + ' frames';
       document.getElementById('btnStitch').disabled = false;
       setStatus('Frame ' + frameCount + ' captured');
+      // Auto-advance the grid suggestion
+      if (gridCols > 0) markCellDone(gridCurrent);
     }
   } catch (err) {
     setStatus('Capture error: ' + err.message);
@@ -227,7 +236,10 @@ async function clearSession() {
   if (sessionId) {
     await fetch(`/session/${sessionId}/clear`, { method: 'POST' });
   }
-  frameCount = 0;
+  frameCount  = 0;
+  gridDone    = new Set();
+  gridCurrent = 0;
+  updateGridProgress();
   document.getElementById('frameCount').textContent = '0 frames';
   document.getElementById('btnStitch').disabled = true;
   document.getElementById('resultsPanel').classList.add('hidden');
@@ -337,8 +349,166 @@ function hideLoading() {
   document.getElementById('loadingOverlay').classList.add('hidden');
 }
 
+// ─── Grid overlay ─────────────────────────────────────────────────────────────
+
+function onGridSizeChange() {
+  gridCols    = getGridSize();
+  gridDone    = new Set();
+  gridCurrent = 0;
+  updateGridProgress();
+  // restart the draw loop (handles off/on transition)
+  if (gridRafId) cancelAnimationFrame(gridRafId);
+  drawGrid();
+}
+
+function updateGridProgress() {
+  const total = gridCols * gridCols;
+  const el    = document.getElementById('gridProgress');
+  if (gridCols === 0) { el.textContent = ''; return; }
+  el.textContent = gridDone.size + '/' + total;
+  el.style.color = gridDone.size === total ? '#4ade80' : '#94a3b8';
+}
+
+/** Mark a cell done and advance the suggestion to the next unchecked cell. */
+function markCellDone(idx) {
+  if (gridCols === 0) return;
+  const total = gridCols * gridCols;
+  gridDone.add(idx);
+  // advance gridCurrent to next undone cell (row-major order)
+  for (let i = 1; i <= total; i++) {
+    const next = (idx + i) % total;
+    if (!gridDone.has(next)) { gridCurrent = next; break; }
+  }
+  updateGridProgress();
+}
+
+/** Toggle a cell's done state when the user taps it. */
+function handleOverlayTap(e) {
+  if (gridCols === 0) return;
+  const canvas  = document.getElementById('overlay');
+  const rect    = canvas.getBoundingClientRect();
+  const x       = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+  const y       = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+  const cellW   = rect.width  / gridCols;
+  const cellH   = rect.height / gridCols;
+  const col     = Math.floor(x / cellW);
+  const row     = Math.floor(y / cellH);
+  const idx     = row * gridCols + col;
+
+  if (gridDone.has(idx)) {
+    gridDone.delete(idx);
+    // reset suggestion if we unchecked the current
+    if (idx === gridCurrent) gridCurrent = idx;
+  } else {
+    markCellDone(idx);
+  }
+  updateGridProgress();
+}
+
+/** Draw the grid on the overlay canvas every animation frame. */
+function drawGrid() {
+  const canvas  = document.getElementById('overlay');
+  const video   = document.getElementById('video');
+  const ctx     = canvas.getContext('2d');
+
+  // Match canvas resolution to its displayed size
+  canvas.width  = canvas.offsetWidth  || video.videoWidth  || 640;
+  canvas.height = canvas.offsetHeight || video.videoHeight || 480;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (gridCols > 0) {
+    const W     = canvas.width;
+    const H     = canvas.height;
+    const cellW = W / gridCols;
+    const cellH = H / gridCols;
+    const total = gridCols * gridCols;
+
+    for (let r = 0; r < gridCols; r++) {
+      for (let c = 0; c < gridCols; c++) {
+        const idx = r * gridCols + c;
+        const x   = c * cellW;
+        const y   = r * cellH;
+
+        // Cell fill
+        if (gridDone.has(idx)) {
+          ctx.fillStyle = 'rgba(74, 222, 128, 0.18)';   // green — done
+        } else if (idx === gridCurrent && scanning) {
+          ctx.fillStyle = 'rgba(251, 191, 36, 0.15)';   // yellow — suggested next
+        } else {
+          ctx.fillStyle = 'rgba(255,255,255,0.03)';
+        }
+        ctx.fillRect(x, y, cellW, cellH);
+
+        // Cell border
+        ctx.strokeStyle = gridDone.has(idx)
+          ? 'rgba(74, 222, 128, 0.7)'
+          : (idx === gridCurrent && scanning)
+            ? 'rgba(251, 191, 36, 0.9)'
+            : 'rgba(255,255,255,0.25)';
+        ctx.lineWidth = gridDone.has(idx) || (idx === gridCurrent && scanning) ? 2 : 1;
+        ctx.strokeRect(x + 0.5, y + 0.5, cellW - 1, cellH - 1);
+
+        // Cell number
+        const fontSize = Math.max(10, Math.min(18, cellW * 0.18));
+        ctx.font       = `600 ${fontSize}px -apple-system, sans-serif`;
+        ctx.textAlign  = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillStyle  = gridDone.has(idx)
+          ? 'rgba(74,222,128,0.9)'
+          : 'rgba(255,255,255,0.55)';
+        ctx.fillText(idx + 1, x + 5, y + 4);
+
+        // Checkmark for done cells
+        if (gridDone.has(idx)) {
+          const cx = x + cellW / 2;
+          const cy = y + cellH / 2;
+          const sz = Math.min(cellW, cellH) * 0.28;
+          ctx.strokeStyle = 'rgba(74,222,128,0.95)';
+          ctx.lineWidth   = Math.max(2, sz * 0.18);
+          ctx.lineCap     = 'round';
+          ctx.lineJoin    = 'round';
+          ctx.beginPath();
+          ctx.moveTo(cx - sz * 0.5, cy);
+          ctx.lineTo(cx - sz * 0.1, cy + sz * 0.45);
+          ctx.lineTo(cx + sz * 0.5, cy - sz * 0.35);
+          ctx.stroke();
+        }
+
+        // "NEXT" label on suggested cell
+        if (idx === gridCurrent && !gridDone.has(idx) && scanning) {
+          ctx.font      = `700 ${Math.max(9, fontSize * 0.7)}px -apple-system, sans-serif`;
+          ctx.fillStyle = 'rgba(251,191,36,0.9)';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('NEXT', x + cellW / 2, y + cellH / 2);
+        }
+      }
+    }
+
+    // Progress bar at bottom of overlay
+    if (total > 0) {
+      const barH   = Math.max(3, H * 0.012);
+      const filled = (gridDone.size / total) * W;
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.fillRect(0, H - barH, W, barH);
+      ctx.fillStyle = '#4ade80';
+      ctx.fillRect(0, H - barH, filled, barH);
+    }
+  }
+
+  gridRafId = requestAnimationFrame(drawGrid);
+}
+
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 (async () => {
   await ensureSession();
   await initCamera();
+
+  // Wire up overlay tap/click for grid cell marking
+  const overlay = document.getElementById('overlay');
+  overlay.addEventListener('click',      handleOverlayTap);
+  overlay.addEventListener('touchstart', handleOverlayTap, { passive: true });
+
+  // Start the draw loop
+  drawGrid();
 })();
